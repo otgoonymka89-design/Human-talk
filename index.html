@@ -21,9 +21,9 @@
     <!-- 3D ХҮН -->
     <a-entity id="human"
               gltf-model="human.glb"
-              position="0 0.8 -1.5"    <!-- өндрийг бага болгож тохируулсан -->
+              position="0 0 -1.5"
               rotation="0 -90 0"
-              scale="0.7 0.7 0.7"      <!-- хэмжээ багасгав -->
+              scale="1 1 1"
               look-at="[camera]">
 
       <!-- ДУУ -->
@@ -51,6 +51,7 @@
           if (mesh && mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
             setInterval(() => {
               const volume = sound ? sound.sound.getVolume() : 0.5;
+              // Морф target нэрийг моделд байгаа нэрээр соль
               if(mesh.morphTargetDictionary['Mouth'] !== undefined){
                 mesh.morphTargetInfluences[mesh.morphTargetDictionary['Mouth']] = volume;
               }
