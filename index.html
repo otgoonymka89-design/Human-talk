@@ -21,9 +21,9 @@
     <!-- 3D ХҮН -->
     <a-entity id="human"
               gltf-model="human.glb"
-              position="0 0 -1.5"
-              rotation="0 -90 0"
-              scale="1 1 1"
+              position="0 0.8 -1.5"  <!-- өндрийг камерын төвд тааруулсан -->
+              rotation="0 180 0"      <!-- камер руу харна -->
+              scale="1.5 1.5 1.5"    <!-- хүнийг томруулж камерын өндөртэй ойролцоо болгосон -->
               look-at="[camera]">
 
       <!-- ДУУ -->
@@ -42,6 +42,7 @@
 
   <script>
     // Амны хөдөлгөөн хийх компонент
+    // ⚠️ Ажиллахын тулд GLB моделд “Mouth” morph target байх шаардлагатай
     AFRAME.registerComponent('mouth-move', {
       init: function () {
         const el = this.el;
@@ -51,11 +52,12 @@
           if (mesh && mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
             setInterval(() => {
               const volume = sound ? sound.sound.getVolume() : 0.5;
-              // Морф target нэрийг моделд байгаа нэрээр соль
               if(mesh.morphTargetDictionary['Mouth'] !== undefined){
                 mesh.morphTargetInfluences[mesh.morphTargetDictionary['Mouth']] = volume;
               }
             }, 50);
+          } else {
+            console.warn("Амны морф target олдсонгүй. Моделд morph target 'Mouth' байх ёстой.");
           }
         });
       }
