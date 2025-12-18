@@ -12,7 +12,11 @@
 </head>
 
 <body style="margin:0; overflow:hidden;">
-
+  <!-- Товч дарахад дуу эхлүүлэх -->
+  <button id="playBtn" style="position: absolute; z-index: 999; top: 20px; left: 20px; padding: 10px 20px; font-size:16px;">
+    Яриулах
+  </button>
+  
   <a-scene
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false;"
@@ -39,6 +43,14 @@
     <a-camera position="0 1.6 0"></a-camera>
 
   </a-scene>
+
+  <script>
+    // Товч дарахад дууг тоглуулах
+    document.getElementById('playBtn').addEventListener('click', function() {
+      const soundEntity = document.querySelector('#voice');
+      soundEntity.components.sound.playSound();
+    });
+ </script>
 
 </body>
 </html>
