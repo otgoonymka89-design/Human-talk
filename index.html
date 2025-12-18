@@ -19,17 +19,18 @@
     vr-mode-ui="enabled:false">
 
     <!-- 3D ХҮН -->
-    <a-entity
-      gltf-model="human.glb"
-      position="0 0 -1.5"
-      rotation="0 -90 0"
-      scale="1 1 1">
+    <a-entity id="human"
+              gltf-model="human.glb"
+              position="0 0.8 -1.5"    <!-- өндрийг бага болгож тохируулсан -->
+              rotation="0 -90 0"
+              scale="0.7 0.7 0.7"      <!-- хэмжээ багасгав -->
+              look-at="[camera]">
 
       <!-- ДУУ -->
-      <a-sound
-        src="voice.mp3"
-        autoplay="true"
-        loop="true">
+      <a-sound id="voice"
+               src="voice.mp3"
+               autoplay="true"
+               loop="true">
       </a-sound>
 
     </a-entity>
@@ -38,6 +39,30 @@
     <a-camera position="0 1.6 0"></a-camera>
 
   </a-scene>
+
+  <script>
+    // Амны хөдөлгөөн хийх компонент
+    AFRAME.registerComponent('mouth-move', {
+      init: function () {
+        const el = this.el;
+        const sound = document.querySelector('#voice').components.sound;
+        el.addEventListener('model-loaded', () => {
+          const mesh = el.getObject3D('mesh');
+          if (mesh && mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+            setInterval(() => {
+              const volume = sound ? sound.sound.getVolume() : 0.5;
+              if(mesh.morphTargetDictionary['Mouth'] !== undefined){
+                mesh.morphTargetInfluences[mesh.morphTargetDictionary['Mouth']] = volume;
+              }
+            }, 50);
+          }
+        });
+      }
+    });
+
+    // Компонентыг human entity дээр нэмнэ
+    document.querySelector('#human').setAttribute('mouth-move', '');
+  </script>
 
 </body>
 </html>
