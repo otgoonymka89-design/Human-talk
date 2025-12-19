@@ -1,101 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>AR Human Talk</title>
+  <head>
+    <meta charset="UTF-8">
+    <title>WebAR Lip-Sync Avatar</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <!-- AR.js -->
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- Lip-sync component -->
+    <script>
+      AFRAME.registerComponent("auto-mouth", {
+        init: function () {
+          const el = this.el;
+          const audio = document.getElementById("voiceAudio");
 
-  <!-- 🔊 Auto Mouth (дуу дагасан ам хөдөлгөөн) -->
-  <script>
-    AFRAME.registerComponent("auto-mouth", {
-      init: function () {
-        const el = this.el;
-        const audio = document.getElementById("voiceAudio");
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const ctx = new AudioContext();
 
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const analyser = ctx.createAnalyser();
-        const source = ctx.createMediaElementSource(audio);
-
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
-
-        const data = new Uint8Array(analyser.frequencyBinCount);
-
-        this.tick = function () {
-          analyser.getByteFrequencyData(data);
-          let volume = data.reduce((a, b) => a + b, 0) / data.length;
-          let mouth = Math.min(volume / 80, 1);
-
-          el.object3D.traverse((node) => {
-            if (node.morphTargetInfluences) {
-              node.morphTargetInfluences[0] = mouth;
+          // Audio-г товч дарахад идэвхжүүлэх
+          document.getElementById("playBtn").addEventListener("click", () => {
+            if (ctx.state === "suspended") {
+              ctx.resume();
             }
           });
-        };
-      }
-    });
-  </script>
-</head>
 
-<body style="margin:0; overflow:hidden;">
+          const analyser = ctx.createAnalyser();
+          const source = ctx.createMediaElementSource(audio);
 
-  <!-- ▶ Play / Stop товч -->
-  <button id="playBtn"
-    style="position:absolute; top:20px; left:20px; z-index:999; padding:10px 20px;">
-    ▶ Start
-  </button>
+          source.connect(analyser);
+          analyser.connect(ctx.destination);
 
-  <!-- 🎧 Audio (control эндээс явна) -->
-  <audio id="voiceAudio" src="voice.mp3"></audio>
+          const data = new Uint8Array(analyser.frequencyBinCount);
 
-  <a-scene
-    embedded
-    arjs="sourceType: webcam; debugUIEnabled: false;"
-    vr-mode-ui="enabled:false">
+          this.tick = function () {
+            analyser.getByteFrequencyData(data);
+            let volume = data.reduce((a, b) => a + b, 0) / data.length;
+            let mouth = Math.min(volume / 70, 1);
 
-    <!-- 3D Хүн -->
-    <a-entity id="human"
-      gltf-model="human.glb"
-      position="0 0.8 -1.5"
-      rotation="0 -90 0"
-      scale="1.5 1.5 1.5"
-      auto-mouth
-      look-at="[camera]">
-    </a-entity>
+            el.object3D.traverse((node) => {
+              if (node.morphTargetInfluences) {
+                node.morphTargetInfluences[0] = mouth;
+              }
+            });
+          };
+        }
+      });
+    </script>
+  </head>
 
-    <a-camera position="0 1.6 0"></a-camera>
-  </a-scene>
+  <body>
+    <h2>WebAR Lip-Sync Avatar</h2>
 
-  <script>
-    const playBtn = document.getElementById("playBtn");
-    const audio = document.getElementById("voiceAudio");
+    <!-- Audio -->
+    <audio id="voiceAudio" src="voice.mp3" preload="auto"></audio>
 
-    let isPlaying = false;
+    <!-- Play Button -->
+    <button id="playBtn">Start</button>
 
-    playBtn.addEventListener("click", async () => {
-      if (!isPlaying) {
-        await audio.play();
-        playBtn.textContent = "⏸ Stop";
-        isPlaying = true;
-      } else {
-        audio.pause();
-        audio.currentTime = 0;
-        playBtn.textContent = "▶ Start";
-        isPlaying = false;
-      }
-    });
+    <script>
+      const playBtn = document.getElementById("playBtn");
+      const audio = document.getElementById("voiceAudio");
+      let isPlaying = false;
 
-    audio.onended = () => {
-      playBtn.textContent = "▶ Start";
-      isPlaying = false;
-    };
-    <audio id="voiceAudio" src="voice.mp3" controls></audio>
+      playBtn.addEventListener("click", async () => {
+        if (!isPlaying) {
+          await audio.play();
+          playBtn.textContent = "Stop";
+          isPlaying = true;
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+          playBtn.textContent = "Start";
+          isPlaying = false;
+        }
+      });
+    </script>
 
-  </script>
+    <!-- A-Frame Scene -->
+    <a-scene background="color: #ECECEC">
+      <a-entity 
+        gltf-model="human.glb" 
+        position="0 0 -1.5" 
+        scale="1.5 1.5 1.5" 
+        auto-mouth>
+      </a-entity>
 
-</body>
+      <a-camera position="0 1.6 0"></a-camera>
+    </a-scene>
+  </body>
 </html>
