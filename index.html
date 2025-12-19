@@ -2,21 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <big>AR Human Talk with Mouth Animation</big>
+  <title>AR Human Talk</title>
 
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <!-- AR.js -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <!-- 🔊 Auto Mouth (дуу дагасан ам хөдөлгөөн) -->
+  <script>
+    AFRAME.registerComponent("auto-mouth", {
+      init: function () {
+        const el = this.el;
+        const audio = document.getElementById("voiceAudio");
+
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const analyser = ctx.createAnalyser();
+        const source = ctx.createMediaElementSource(audio);
+
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        const data = new Uint8Array(analyser.frequencyBinCount);
+
+        this.tick = function () {
+          analyser.getByteFrequencyData(data);
+          let volume = data.reduce((a, b) => a + b, 0) / data.length;
+          let mouth = Math.min(volume / 80, 1);
+
+          el.object3D.traverse((node) => {
+            if (node.morphTargetInfluences) {
+              node.morphTargetInfluences[0] = mouth;
+            }
+          });
+        };
+      }
+    });
+  </script>
 </head>
 
 <body style="margin:0; overflow:hidden;">
 
-  <!-- Play / Stop товч -->
+  <!-- ▶ Play / Stop товч -->
   <button id="playBtn"
     style="position:absolute; top:20px; left:20px; z-index:999; padding:10px 20px;">
     ▶ Start
   </button>
+
+  <!-- 🎧 Audio (control эндээс явна) -->
+  <audio id="voiceAudio" src="voice.mp3"></audio>
 
   <a-scene
     embedded
@@ -25,32 +59,12 @@
 
     <!-- 3D Хүн -->
     <a-entity id="human"
-              gltf-model="human.glb"
-              position="0 0.8 -1.5"
-              rotation="0 -90 0"
-              scale="1.5 1.5 1.5"
-              look-at="[camera]">
-
-      <!-- Дуу -->
-      <a-sound id="voice"
-               src="voice.mp3"
-               autoplay="false"
-               loop="false">
-      </a-sound>
-
-      <!-- Амны animation -->
-      <a-animation id="mouthAnim"
-                   attribute="scale"
-                   from="1.5 1.5 1.5"
-                   to="1.5 1.6 1.5"
-                   direction="alternate"
-                   dur="200"
-                   repeat="indefinite"
-                   easing="ease-in-out"
-                   begin="playMouth"
-                   end="stopMouth">
-      </a-animation>
-
+      gltf-model="human.glb"
+      position="0 0.8 -1.5"
+      rotation="0 -90 0"
+      scale="1.5 1.5 1.5"
+      auto-mouth
+      look-at="[camera]">
     </a-entity>
 
     <a-camera position="0 1.6 0"></a-camera>
@@ -58,34 +72,27 @@
 
   <script>
     const playBtn = document.getElementById("playBtn");
-    const voiceEl = document.getElementById("voice");
-    const human = document.getElementById("human");
+    const audio = document.getElementById("voiceAudio");
 
     let isPlaying = false;
 
-    playBtn.addEventListener("click", () => {
-      const sound = voiceEl.components.sound;
-
+    playBtn.addEventListener("click", async () => {
       if (!isPlaying) {
-        sound.playSound();
-        human.emit("playMouth");
+        await audio.play();
         playBtn.textContent = "⏸ Stop";
         isPlaying = true;
-
-        // Дуу дуусахад автоматаар зогсооно
-        sound.sound.onended = () => {
-          human.emit("stopMouth");
-          playBtn.textContent = "▶ Start";
-          isPlaying = false;
-        };
-
       } else {
-        sound.stopSound();
-        human.emit("stopMouth");
+        audio.pause();
+        audio.currentTime = 0;
         playBtn.textContent = "▶ Start";
         isPlaying = false;
       }
     });
+
+    audio.onended = () => {
+      playBtn.textContent = "▶ Start";
+      isPlaying = false;
+    };
   </script>
 
 </body>
