@@ -9,11 +9,13 @@
   <!-- AR.js -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 </head>
+
 <body style="margin:0; overflow:hidden;">
 
-  <!-- Товч дарахад дуу эхлүүлэх -->
-  <button id="playBtn" style="position: absolute; top: 20px; left: 20px; z-index: 999; padding:10px 20px;">
-    Start
+  <!-- Play / Stop товч -->
+  <button id="playBtn"
+    style="position:absolute; top:20px; left:20px; z-index:999; padding:10px 20px;">
+    ▶ Start
   </button>
 
   <a-scene
@@ -21,7 +23,7 @@
     arjs="sourceType: webcam; debugUIEnabled: false;"
     vr-mode-ui="enabled:false">
 
-    <!-- 3D ХҮН -->
+    <!-- 3D Хүн -->
     <a-entity id="human"
               gltf-model="human.glb"
               position="0 0.8 -1.5"
@@ -29,46 +31,60 @@
               scale="1.5 1.5 1.5"
               look-at="[camera]">
 
-      <!-- MP3 дуу -->
+      <!-- Дуу -->
       <a-sound id="voice"
                src="voice.mp3"
                autoplay="false"
                loop="false">
       </a-sound>
 
-      <!-- Амны хөдөлгөөн animation -->
+      <!-- Амны animation -->
       <a-animation id="mouthAnim"
                    attribute="scale"
+                   from="1.5 1.5 1.5"
                    to="1.5 1.6 1.5"
                    direction="alternate"
                    dur="200"
                    repeat="indefinite"
                    easing="ease-in-out"
-                   begin="playMouth">
+                   begin="playMouth"
+                   end="stopMouth">
       </a-animation>
 
     </a-entity>
 
-    <!-- CAMERA -->
     <a-camera position="0 1.6 0"></a-camera>
-
   </a-scene>
 
   <script>
-    const playBtn = document.getElementById('playBtn');
-    const voice = document.querySelector('#voice');
-    const human = document.querySelector('#human');
+    const playBtn = document.getElementById("playBtn");
+    const voiceEl = document.getElementById("voice");
+    const human = document.getElementById("human");
 
-    playBtn.addEventListener('click', () => {
-      voice.components.sound.playSound();
+    let isPlaying = false;
 
-      // Амны animation эхлүүлэх
-      human.emit('playMouth');
+    playBtn.addEventListener("click", () => {
+      const sound = voiceEl.components.sound;
 
-      // Дуу дууссаны дараа animation зогсоох
-      voice.components.sound.sound.onended = () => {
-        human.removeAttribute('animation'); // simplified зогсоох
-      };
+      if (!isPlaying) {
+        sound.playSound();
+        human.emit("playMouth");
+        playBtn.textContent = "⏸ Stop";
+        isPlaying = true;
+
+        // Дуу дуусахад автоматаар зогсооно
+        sound.sound.onended = () => {
+          human.emit("stopMouth");
+          playBtn.textContent = "▶ Start";
+          isPlaying = false;
+        };
+
+      } else {
+        sound.stopSound();
+        human.emit("stopMouth");
+        playBtn.textContent = "▶ Start";
+        isPlaying = false;
+      }
     });
   </script>
 
